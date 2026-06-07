@@ -6,6 +6,23 @@ clientsClaim();
 precacheAndRoute(self.__WB_MANIFEST);
 cleanupOutdatedCaches();
 
+// Ensure credentials (cookies) are sent with API requests
+self.addEventListener('fetch', (event) => {
+    // Only intercept API calls, let other requests go through normally
+    if (event.request.url.includes('/api/')) {
+        event.respondWith(
+            fetch(event.request.clone(), {
+                credentials: 'include'
+            }).catch(() => {
+                // Network error, continue normally
+                return fetch(event.request.clone(), {
+                    credentials: 'include'
+                });
+            })
+        );
+    }
+});
+
 self.addEventListener('push', (event) => {
     const data = event.data?.json();
     if (!data) return;
