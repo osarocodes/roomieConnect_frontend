@@ -25,16 +25,29 @@ export default defineConfig({
         start_url: '/',
         icons: [
           {
-            src: 'favicon_io/android-chrome-192x192.png',
+            src: '/favicon_io/android-chrome-192x192.png',
             sizes: '192x192',
             type: 'image/png'
           },
           {
-            src: 'favicon_io/android-chrome-512x512.png',
+            src: '/favicon_io/android-chrome-512x512.png',
             sizes: '512x512',
             type: 'image/png'
           }
-        ]
+        ],
+        screenshots: [
+        {
+          src: '/screenshots/desktop.png',
+          sizes: '1280x720',
+          type: 'image/png',
+          form_factor: 'wide'
+        },
+        {
+          src: '/screenshots/mobile.png',
+          sizes: '750x1334',
+          type: 'image/png'
+        }
+      ]
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
