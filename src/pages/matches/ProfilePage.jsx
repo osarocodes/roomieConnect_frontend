@@ -1,21 +1,55 @@
 import { useState, useEffect } from "react";
-import { Camera } from 'lucide-react';
+import { Camera, Loader2 } from 'lucide-react';
 import { useAuthStore } from "@/stores/useAuthStore";
 import toast from "react-hot-toast";
 
+const getSafeUser = (rawUser) => ({
+    identity: {
+        firstName: '',
+        lastName: '',
+        email: '',
+        phone: '',
+        gender: 'any',
+        profilePic: '',
+        ...rawUser?.identity,
+    },
+    profile: {
+        about: '',
+        ...rawUser?.profile,
+    },
+    university: {
+        department: '',
+        ...rawUser?.university,
+    },
+    lifestyleHabits: {
+        ...rawUser?.lifestyleHabits,
+    },
+    preferences: {
+        ...rawUser?.preferences,
+    },
+    budget: {
+        rentRange: {
+            min: '',
+            max: '',
+            ...rawUser?.budget?.rentRange,
+        },
+        ...rawUser?.budget,
+    },
+    locationPreference: {
+        preferredArea: '',
+        ...rawUser?.locationPreference,
+    },
+    ...rawUser,
+});
 
 export default function ProfilePage() {
     const { authUser, updateProfile, isUpdatingProfile } = useAuthStore();
     const [isEditingPersonalInfo, setIsEditingPersonalInfo] = useState(false);
     const [isEditingRoommatePrefs, setIsEditingRoommatePrefs] = useState(false);
-    const [user, setUser] = useState(authUser);
+    const [user, setUser] = useState(() => getSafeUser(authUser));
 
     useEffect(() => {
-        console.log("Local user:", user)
-    });
-    
-    useEffect(() => {
-        if (authUser) setUser(authUser);
+        setUser(getSafeUser(authUser));
     }, [authUser]);
 
 
@@ -114,7 +148,7 @@ export default function ProfilePage() {
     };
 
     const handleCancel = () => {
-        setUser(authUser);
+        setUser(getSafeUser(authUser));
         setIsEditingPersonalInfo(false);
         setIsEditingRoommatePrefs(false);
     };
@@ -180,6 +214,12 @@ export default function ProfilePage() {
         };
         return prefMap[data] !== undefined ? prefMap[data] : data;
     }
+
+    if (!authUser || !user) return (
+        <div className="flex min-h-screen items-center justify-center">
+            <Loader2 className="h-10 w-10 animate-spin" />
+        </div>
+    );
 
     return (
         <main className="flex flex-col items-center px-4 pt-6 pb-24 space-y-6 overflow-y-auto bg-base-200">
@@ -268,9 +308,9 @@ export default function ProfilePage() {
                     {!isEditingPersonalInfo && authUser && (
                         <div className="mt-4">
                             <div className='grid grid-cols-2 gap-3'>
-                                < div className=' form-control ' >
-                                    < label className=' label '>< span className=' label-text '>First Name</ span ></ label >
-                                    < input type=' text ' name = 'firstName' value = { authUser.identity.firstName } disabled className = ' input input-bordered w-full ' />
+                                <div className='form-control'>
+                                    <label className='label'><span className='label-text'>First Name</span></label>
+                                    <input type='text' name='firstName' value={authUser.identity.firstName} disabled className='input input-bordered w-full' />
                                 </div>
                                 <div className="form-control">
                                     <label className="label"><span className="label-text">Last Name</span></label>
