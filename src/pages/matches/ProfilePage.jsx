@@ -214,8 +214,7 @@ export default function ProfilePage() {
         };
         return prefMap[data] !== undefined ? prefMap[data] : data;
     }
-
-    if (!authUser || !user) return (
+    if (!authUser || !user || !authUser.identity || !user.identity) return (
         <div className="flex min-h-screen items-center justify-center">
             <Loader2 className="h-10 w-10 animate-spin" />
         </div>
@@ -227,7 +226,7 @@ export default function ProfilePage() {
             <div className="card bg-base-100 shadow-xl items-center w-full max-w-md p-6 space-y-2">
                 <div className="avatar">
                     <div className="w-28 rounded-full">
-                        <img src={user.identity?.profilePic} alt="User avatar" />
+                        <img src={user?.identity?.profilePic} alt="User avatar" />
                     </div>
                 </div>
                 <label className="btn btn-primary btn-outline btn-sm">
@@ -271,27 +270,27 @@ export default function ProfilePage() {
                             <div className="grid grid-cols-2 gap-3">
                                 <div className="form-control">
                                     <label className="label"><span className="label-text">First Name</span></label>
-                                    <input type="text" name="firstName" value={user.identity.firstName} onChange={handleChange('identity')} className="input input-bordered w-full" />
+                                    <input type="text" name="firstName" value={user?.identity?.firstName} onChange={handleChange('identity')} className="input input-bordered w-full" />
                                 </div>
                                 <div className="form-control">
                                     <label className="label"><span className="label-text">Last Name</span></label>
-                                    <input type="text" name="lastName" value={user.identity.lastName} onChange={handleChange('identity')} className="input input-bordered w-full" />
+                                    <input type="text" name="lastName" value={user?.identity?.lastName} onChange={handleChange('identity')} className="input input-bordered w-full" />
                                 </div>
                             </div>
 
                             <div className="form-control">
                                 <label className="label"><span className="label-text">Email</span></label>
-                                <input type="email" name="email" value={user.identity.email} onChange={handleChange('identity')} className="input input-bordered w-full" />
+                                <input type="email" name="email" value={user?.identity?.email} onChange={handleChange('identity')} className="input input-bordered w-full" />
                             </div>
 
                             <div className="form-control">
                                 <label className="label"><span className="label-text">Phone Number</span></label>
-                                <input type="tel" name="phone" value={user.identity.phone} onChange={handleChange('identity')} className="input input-bordered w-full" />
+                                <input type="tel" name="phone" value={user?.identity?.phone} onChange={handleChange('identity')} className="input input-bordered w-full" />
                             </div>
 
                             <div className="form-control">
                                 <label className="label"><span className="label-text">Gender</span></label>
-                                <select name="gender" value={user.identity.gender} onChange={handleChange('identity')} className="select select-bordered w-full">
+                                <select name="gender" value={user?.identity?.gender} onChange={handleChange('identity')} className="select select-bordered w-full">
                                     <option value='male'>male</option>
                                     <option value='female'>female</option>
                                     <option value='any'>any</option>
@@ -300,7 +299,7 @@ export default function ProfilePage() {
 
                             <div className='form-control'>
                                 <label htmlFor='about' className=' label'><span className=' label-text '>About Me</span></label>
-                                <textarea name='about' value={user.profile.about} onChange={handleChange('profile')} className=' textarea textarea-bordered w-full min-h-[80px]' />
+                                <textarea name='about' value={user?.profile?.about} onChange={handleChange('profile')} className=' textarea textarea-bordered w-full min-h-[80px]' />
                             </div>
                         </div>
                     )}
@@ -310,27 +309,27 @@ export default function ProfilePage() {
                             <div className='grid grid-cols-2 gap-3'>
                                 <div className='form-control'>
                                     <label className='label'><span className='label-text'>First Name</span></label>
-                                    <input type='text' name='firstName' value={authUser.identity.firstName} disabled className='input input-bordered w-full' />
+                                    <input type='text' name='firstName' value={authUser?.identity?.firstName} disabled className='input input-bordered w-full' />
                                 </div>
                                 <div className="form-control">
                                     <label className="label"><span className="label-text">Last Name</span></label>
-                                    <input type="text" name="lastName" value={authUser.identity.lastName} disabled className="input input-bordered w-full" />
+                                    <input type="text" name="lastName" value={authUser?.identity?.lastName} disabled className="input input-bordered w-full" />
                                 </div>
                             </div>
 
                             <div className="form-control">
                                 <label className="label"><span className="label-text">Email</span></label>
-                                <input type="email" name="email" value={authUser.identity.email} disabled className="input input-bordered w-full" />
+                                <input type="email" name="email" value={authUser?.identity?.email} disabled className="input input-bordered w-full" />
                             </div>
 
                             <div className="form-control">
                                 <label className="label"><span className="label-text">Phone Number</span></label>
-                                <input type="tel" name="phone" value={authUser.identity.phone} disabled className="input input-bordered w-full" />
+                                <input type="tel" name="phone" value={authUser?.identity?.phone} disabled className="input input-bordered w-full" />
                             </div>
 
                             <div className="form-control">
                                 <label className="label"><span className="label-text">Gender</span></label>
-                                <select name="gender" value={authUser.identity.gender} disabled className="select select-bordered w-full">
+                                <select name="gender" value={authUser?.identity?.gender} disabled className="select select-bordered w-full">
                                     <option>male</option>
                                     <option>female</option>
                                     <option>any</option>
@@ -339,7 +338,7 @@ export default function ProfilePage() {
 
                             <div className="form-control">
                                 <label className="label"><span className="label-text">About Me</span></label>
-                                <textarea name="about" value={authUser.profile.about} disabled className="textarea textarea-bordered w-full min-h-[80px]" />
+                                <textarea name="about" value={authUser?.profile?.about} disabled className="textarea textarea-bordered w-full min-h-[80px]" />
                             </div>
                         </div>
                     )}
@@ -356,7 +355,7 @@ export default function ProfilePage() {
                     </div>
                     <div className="form-control">
                         <label className="label"><span className="label-text">Major</span></label>
-                        <input type="text" name="major" value={authUser.university.department} disabled className="input input-bordered w-full" />
+                        <input type="text" name="major" value={authUser?.university?.department} disabled className="input input-bordered w-full" />
                     </div>
                 </div>
             </div>
@@ -391,7 +390,7 @@ export default function ProfilePage() {
                         <div className="mt-4">
                             <div className="form-control">
                                 <label className="label"><span className="label-text">Cleanliness Level</span></label>
-                                <select name="cleanliness" value={user.lifestyleHabits?.cleanliness || ''} onChange={handleChange('lifestyleHabits')} className="select select-bordered w-full">
+                                <select name="cleanliness" value={user?.lifestyleHabits?.cleanliness || ''} onChange={handleChange('lifestyleHabits')} className="select select-bordered w-full">
                                     <option value="Honestly, I only clean when someone's coming over.">Honestly, I only clean when someone's coming over.</option>
                                     <option value="I wait till I can’t take it anymore.">I wait till I can’t take it anymore.</option>
                                     <option value="I clean once I start feeling uncomfortable.">I clean once I start feeling uncomfortable.</option>
@@ -401,7 +400,7 @@ export default function ProfilePage() {
 
                             <div className="form-control">
                                 <label className="label"><span className="label-text">Preferred Gender</span></label>
-                                <select name="preferredGender" value={user.preferences?.preferredGender || ''} onChange={handleChange('preferences')} className="select select-bordered w-full">
+                                <select name="preferredGender" value={user?.preferences?.preferredGender || ''} onChange={handleChange('preferences')} className="select select-bordered w-full">
                                     <option value='male'>male</option>
                                     <option value='female'>female</option>
                                     <option value='any'>any</option>
@@ -410,7 +409,7 @@ export default function ProfilePage() {
 
                             <div className="form-control">
                                 <label className="label"><span className="label-text">Sleep Schedule</span></label>
-                                <select name="sleepSchedule" value={user.lifestyleHabits?.sleepSchedule || ''} onChange={handleChange('lifestyleHabits')} className="select select-bordered w-full">
+                                <select name="sleepSchedule" value={user?.lifestyleHabits?.sleepSchedule || ''} onChange={handleChange('lifestyleHabits')} className="select select-bordered w-full">
                                     <option value="Early sleeper, early riser.">Early sleeper, early riser.</option>
                                     <option value="Night owl, late mornings.">Night owl, late mornings.</option>
                                     <option value="Flexible, depends on the day.">Flexible, depends on the day.</option>
@@ -420,7 +419,7 @@ export default function ProfilePage() {
                             
                             <div className="form-control">
                                 <label className="label"><span className="label-text">Noise Tolerance</span></label>
-                                <select name="noiseTolerance" value={user.lifestyleHabits?.noiseTolerance || ''} onChange={handleChange('lifestyleHabits')} className="select select-bordered w-full">
+                                <select name="noiseTolerance" value={user?.lifestyleHabits?.noiseTolerance || ''} onChange={handleChange('lifestyleHabits')} className="select select-bordered w-full">
                                     <option>I need complete silence.</option>
                                     <option>Low background noise is okay.</option>
                                     <option>I like music or people around.</option>
@@ -430,7 +429,7 @@ export default function ProfilePage() {
 
                             <div className="form-control">
                                 <label className="label"><span className="label-text">Social Habits</span></label>
-                                <select name="socialHabits" value={user.lifestyleHabits?.socialHabits || ''} onChange={handleChange('lifestyleHabits')} className="select select-bordered w-full">
+                                <select name="socialHabits" value={user?.lifestyleHabits?.socialHabits || ''} onChange={handleChange('lifestyleHabits')} className="select select-bordered w-full">
                                     <option value="Party night, for sure.">Party night, for sure.</option>
                                     <option value="With a group, maybe an outing.">With a group, maybe an outing.</option>
                                     <option value="With 1-2 close friends.">With 1-2 close friends.</option>
@@ -440,7 +439,7 @@ export default function ProfilePage() {
 
                             <div className="form-control">
                                 <label className="label"><span className="label-text">Yearly Budget (split)</span></label>
-                                <select name="rentRange" value={getRentRangeString(user.budget?.rentRange)} onChange={handleChange('budget')} className="select select-bordered w-full">
+                                <select name="rentRange" value={getRentRangeString(user?.budget?.rentRange)} onChange={handleChange('budget')} className="select select-bordered w-full">
                                     {/* <option>{budget}</option> */}
                                     <option value="₦90,000 - ₦120,000">₦90,000 - ₦120,000</option>
                                     <option value="₦120,000 - ₦180,000">₦120,000 - ₦180,000</option>
@@ -451,7 +450,7 @@ export default function ProfilePage() {
 
                             <div className="form-control">
                                 <label className="label"><span className="label-text">Location Preference</span></label>
-                                <select name="preferredArea" value={user.locationPreference?.preferredArea || ''} onChange={handleChange('locationPreference')} className="select select-bordered w-full">
+                                <select name="preferredArea" value={user?.locationPreference?.preferredArea || ''} onChange={handleChange('locationPreference')} className="select select-bordered w-full">
                                     <option value="BDPA">BDPA</option>
                                     <option value="Osasogie">Osasogie</option>
                                     <option value="Ekosodin">Ekosodin</option>
@@ -461,14 +460,14 @@ export default function ProfilePage() {
                             <div className="form-control">
                                 <label className="label cursor-pointer">
                                     <span className="label-text">Pets</span>
-                                    <input name="petPerson" type="checkbox" checked={handlePrefMap(user.preferences?.petPerson)} onChange={handleChange('preferences')} className="checkbox" />
+                                    <input name="petPerson" type="checkbox" checked={handlePrefMap(user?.preferences?.petPerson)} onChange={handleChange('preferences')} className="checkbox" />
                                 </label>
                             </div>
 
                             <div className="form-control">
                                 <label className="label cursor-pointer">
                                     <span className="label-text">Smoker</span>
-                                    <input name="cigaretteSmoker" type="checkbox" checked={handlePrefMap(user.preferences?.cigaretteSmoker)} onChange={handleChange('preferences')} className="checkbox" />
+                                    <input name="cigaretteSmoker" type="checkbox" checked={handlePrefMap(user?.preferences?.cigaretteSmoker)} onChange={handleChange('preferences')} className="checkbox" />
                                 </label>
                             </div>
                         </div>
@@ -476,50 +475,50 @@ export default function ProfilePage() {
                         <div className="mt-4">
                             <div className="form-control">
                                 <label className="label"><span className="label-text">Cleanliness Level</span></label>
-                                <input type="text" name="cleanliness" value={authUser.lifestyleHabits?.cleanliness || ''} disabled className="select select-bordered w-full" />
+                                <input type="text" name="cleanliness" value={authUser?.lifestyleHabits?.cleanliness || ''} disabled className="select select-bordered w-full" />
                             </div>
 
                             <div className="form-control">
                                 <label className="label"><span className="label-text">Preferred Gender</span></label>
-                                <input type="text" name="preferredGender" value={authUser.preferences?.preferredGender || ''} disabled className="select select-bordered w-full" />
+                                <input type="text" name="preferredGender" value={authUser?.preferences?.preferredGender || ''} disabled className="select select-bordered w-full" />
                             </div>
 
                             <div className="form-control">
                                 <label className="label"><span className="label-text">Sleep Schedule</span></label>
-                                <input type="text" name="sleepSchedule" value={authUser.lifestyleHabits?.sleepSchedule || ''} disabled className="select select-bordered w-full" />
+                                <input type="text" name="sleepSchedule" value={authUser?.lifestyleHabits?.sleepSchedule || ''} disabled className="select select-bordered w-full" />
                             </div>
                             
                             <div className="form-control">
                                 <label className="label"><span className="label-text">Noise Tolerance</span></label>
-                                <input type="text" name="noiseTolerance" value={authUser.lifestyleHabits?.noiseTolerance || ''} disabled className="select select-bordered w-full" />
+                                <input type="text" name="noiseTolerance" value={authUser?.lifestyleHabits?.noiseTolerance || ''} disabled className="select select-bordered w-full" />
                             </div>
 
                             <div className="form-control">
                                 <label className="label"><span className="label-text">Social Habits</span></label>
-                                <input type="text" name="socialHabits" value={authUser.lifestyleHabits?.socialHabits || ''} disabled className="select select-bordered w-full" />
+                                <input type="text" name="socialHabits" value={authUser?.lifestyleHabits?.socialHabits || ''} disabled className="select select-bordered w-full" />
                             </div>
 
                             <div className="form-control">
                                 <label className="label"><span className="label-text">Yearly Budget</span></label>
-                                <input type="text" name="rentRange" value={`₦${authUser.budget?.rentRange?.min || ''} - ₦${authUser.budget?.rentRange?.max || ''}`} disabled className="select select-bordered w-full" />
+                                <input type="text" name="rentRange" value={`₦${authUser?.budget?.rentRange?.min || ''} - ₦${authUser?.budget?.rentRange?.max || ''}`} disabled className="select select-bordered w-full" />
                             </div>
 
                             <div className="form-control">
                                 <label className="label"><span className="label-text">Location Preference</span></label>
-                                <input type="text" name="preferredArea" value={authUser.locationPreference?.preferredArea || ''} disabled className="select select-bordered w-full" />
+                                <input type="text" name="preferredArea" value={authUser?.locationPreference?.preferredArea || ''} disabled className="select select-bordered w-full" />
                             </div>
 
                             <div className="form-control">
                                 <label className="label cursor-pointer">
                                     <span className="label-text">Pets</span>
-                                    <input name="petPerson" type="checkbox" checked={handlePrefMap(authUser.preferences?.petPerson)} className="checkbox" disabled />
+                                    <input name="petPerson" type="checkbox" checked={handlePrefMap(authUser?.preferences?.petPerson)} className="checkbox" disabled />
                                 </label>
                             </div>
 
                             <div className="form-control">
                                 <label className="label cursor-pointer">
                                     <span className="label-text">Smoker</span>
-                                    <input name="cigaretteSmoker" type="checkbox" checked={handlePrefMap(authUser.preferences?.cigaretteSmoker)} className="checkbox" disabled />
+                                    <input name="cigaretteSmoker" type="checkbox" checked={handlePrefMap(authUser?.preferences?.cigaretteSmoker)} className="checkbox" disabled />
                                 </label>
                             </div>
                         </div>

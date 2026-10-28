@@ -96,6 +96,47 @@ export const useAuthStore = create(persist((set, get) => ({
             toast.error("Logout failed. Please try again.");
         }
     },
+    requestOtp: async (data) => {
+        try {
+            await axiosInstance.post('/auth/send-otp', data);
+            toast.success("OTP sent successfully!");
+            return { success: true, message: "OTP sent successfully!" };
+        } catch (error) {
+            console.error(error);
+            toast.error("Failed to send OTP. Please try again.");
+            return { success: false, message: "Failed to send OTP. Please try again." };
+        }
+    },
+    verifyOtp: async (data) => {
+        try {
+            const res = await axiosInstance.post('/auth/verify-otp', data);
+            toast.success("OTP verified successfully!");
+            return { 
+                success: true, 
+                message: res.data.message, 
+                resetToken: res.data.resetToken};
+        } catch (error) {
+            const errorMessage = error.response?.data?.message || "OTP verification failed";
+            toast.error(errorMessage);
+            return { success: false, message: errorMessage };
+        }
+    },
+    updatePassword: async (data) => {
+        const token = sessionStorage.getItem('resetToken');
+        try {
+            await axiosInstance.post('/auth/update-password', data, {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                }
+            });
+            toast.success("Password updated successfully!");
+            return { success: true, message: "Password updated successfully!" };
+        } catch (error) {
+            const errorMessage = error.response?.data?.message || "Password update failed";
+            toast.error(errorMessage);
+            return { success: false, message: errorMessage };
+        }
+    },
     updateProfile: async (updatedData) => {
         set({ isUpdatingProfile: true });
         try {

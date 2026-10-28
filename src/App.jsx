@@ -4,7 +4,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import SignupContainer from './pages/auth/SignupContainer';
 import LoginContainer from './pages/auth/Login';
 import EmailCollection from './pages/auth/PasswordResetRequest';
-import Verification from './pages/auth/VerifyPasswordResetCode';
+import Verification from './pages/auth/Verification';
 import PasswordChange from './pages/auth/SetNewPassword';
 import SuccessPage from './pages/auth/SignUpSuccessPage';
 import AuthLayout from './layouts/AuthLayout';
@@ -42,21 +42,22 @@ function App() {
       checkAdmin();
     }
   }, [authUser]);
-  console.log("Admin status:", admin);
 
   // Show a loader while we are validating auth or waiting for the admin check to resolve.
   // `admin` starts as `null`, so without this check the routes can redirect before we know the user is an admin.
   const isLoadingAdmin = authUser && admin === null;
-  if ((isCheckingAuth && !authUser) || isCheckingAdmin || isLoadingAdmin) return (
-    <div className='flex items-center justify-center min-h-screen'>
-      <Loader className="size-10 animate-spin" />
-    </div>
-  );
+  const isBooting = (isCheckingAuth && !authUser) || isCheckingAdmin || isLoadingAdmin;
 
   return (
-    <div className="bg-base-200 text-base-content" data-theme={theme}>
-      <Router>
-        <Routes>
+    <div className="min-h-screen" data-theme={theme}>
+      <Toaster />
+      {isBooting ? (
+        <div className='flex items-center justify-center min-h-screen'>
+          <Loader className="size-10 animate-spin" />
+        </div>
+      ) : (
+        <Router>
+          <Routes>
           {/* 1. Public / Entry Logic */}
           <Route path="/" element={<Navigate to="/auth/login" replace />} />
           
@@ -94,8 +95,8 @@ function App() {
           {/* 5. Catch-all (404) */}
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
-      </Router>
-      <Toaster />
+        </Router>
+      )}
     </div>
   );
 }
