@@ -15,11 +15,11 @@ export const subscribeToPushNotifications = async (axiosInstance) => {
         if (permission !== 'granted') return;
 
         const subscription = await registration.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(import.meta.env.VITE_VAPID_PUBLIC_KEY)
+            userVisibleOnly: true,
+            applicationServerKey: urlBase64ToUint8Array(import.meta.env.VITE_VAPID_PUBLIC_KEY)
         });
 
-        await axiosInstance.post('/notifications/subscribe', { subscription });
+        await axiosInstance.post('/messages/notifications/subscribe', { subscription });
         console.log('Push subscription saved');
     } catch (error) {
         console.error('Push subscription failed:', error);

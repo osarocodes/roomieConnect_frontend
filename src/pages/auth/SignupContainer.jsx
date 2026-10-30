@@ -218,13 +218,14 @@ export default function SignupContainer() {
 		// Append files separately
 		if (profilePic) finalFormData.append('profilePic', profilePic);
 		if (admissionLetterFile) finalFormData.append('admissionLetter', admissionLetterFile);
-		console.log("Final FormData:", finalFormData);
 
 		// Call the signup action from the store
-		const success = await signup(finalFormData);
-		console.log("Signup success:", success);
-		if (success) {
+		const result = await signup(finalFormData);
+		if (result.success) {
 			navigate('/');
+			toast.success(result.message);
+		} else {
+			toast.error(result.message);
 		}
 	};
 

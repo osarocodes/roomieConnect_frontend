@@ -58,7 +58,7 @@ export const useAuthStore = create(persist((set, get) => ({
             get().connectSocket();
             return { success: true, message: "Account created successfully!" };
         } catch (error) {
-            const errorMessage = error || "Signup Failed";
+            const errorMessage = error.response?.data?.message || "Signup Failed";
             return { success: false, message: errorMessage };
         } finally {
             set({ isSigningUp: false });

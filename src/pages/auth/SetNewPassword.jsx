@@ -10,7 +10,7 @@ export default function PasswordChange() {
 
   const { updatePassword } = useAuthStore();
 
-  const hasMinimumLength = password.length >= 6;
+  const hasMinimumLength = password.length >= 8;
   const hasNumber = /\d/.test(password);
 
   const handleSubmit = async (e) => {
@@ -88,7 +88,7 @@ export default function PasswordChange() {
                 </p>
                 <p className="flex items-center gap-3 ml-9">
                   {hasMinimumLength ? <CircleCheck className="bg-primary rounded-full"/> : <CircleCheck />} 
-                  At least 6 characters
+                  At least 8 characters
                 </p>
                 <p className="flex items-center gap-3 ml-9">
                   {hasNumber ? <CircleCheck className="bg-primary rounded-full"/> : <CircleCheck />} 
