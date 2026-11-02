@@ -62,8 +62,8 @@ const submitFinalReport = async () => {
         if (userObj && userObj.user._id) {
             const confirmed = window.confirm("Are you sure you want to clear the chat?");
             if (confirmed) {
-                await clearChat(userObj.user._id);
-                toast.success('Chat cleared successfully');
+                const cleared = await clearChat(userObj.conversationId);
+                if (cleared) toast.success('Chat cleared successfully');
             } else {
                 toast.error('Chat clear canceled');
             }

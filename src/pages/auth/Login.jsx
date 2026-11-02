@@ -39,8 +39,8 @@ export default function Login() {
 			toast.error('Password is required');
 			return false;
 		}
-        if (formData.auth.password.length < 6) {
-			toast.error('Password must be at least 6 characters');
+		if (formData.auth.password.length < 8) {
+			toast.error('Password must be at least 8 characters');
 			return false;
 		}
 

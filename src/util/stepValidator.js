@@ -20,8 +20,11 @@ const stepValidators = {
         if (!formData.auth.confirmPassword) {
             return { isValid: false, errorField: 'confirmPassword', message: 'Confirm Password is required' };
         }
-        if (formData.auth.password.length < 6) {
-            return { isValid: false, errorField: 'password', message: 'Password must be at least 6 characters' };
+        if (formData.auth.password.length < 8) {
+            return { isValid: false, errorField: 'password', message: 'Password must be at least 8 characters' };
+        }
+        if (!/\d/.test(formData.auth.password)) {
+            return { isValid: false, errorField: 'password', message: 'Password must contain at least one number' };
         }
         if (formData.auth.password !== formData.auth.confirmPassword) {
             return { isValid: false, errorField: 'confirmPassword', message: 'Passwords do not match' };

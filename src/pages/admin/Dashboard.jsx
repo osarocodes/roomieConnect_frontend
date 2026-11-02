@@ -1,7 +1,7 @@
 import { 
     Users, 
     UserCheck, 
-    Heart, 
+    Activity, 
     AlertTriangle, 
     Settings, 
     ShieldAlert, 
@@ -10,25 +10,23 @@ import {
     Zap
 } from "lucide-react";
 import { useEffect } from "react";
-import { useChatStore } from "../../stores/useChatStore";
 import { useAuthStore } from "../../stores/useAuthStore";
 import { useAdminStore } from "../../stores/useAdminStore";
 import { formatYearTimestamp } from "@/util/formatMessageTimestamp";
 import { Link } from "react-router-dom";
 
 export default function Dashboard() {
-    const { getUsers, users } = useChatStore();
+    const { dashboardMetrics, fetchDashboardMetrics } = useAdminStore();
     const { onlineUsers, connectSocket } = useAuthStore();
     const { fetchActivities, activities, reports, getReportedUsers } = useAdminStore();
 
     useEffect(() => {
-        getUsers();
         connectSocket();
         fetchActivities();
         getReportedUsers();
-
-    }, [getUsers, connectSocket, fetchActivities, getReportedUsers]);
-    console.log("Admin Reports:", reports);
+        fetchDashboardMetrics();
+    }, [connectSocket, fetchActivities, getReportedUsers, fetchDashboardMetrics]);
+    const pendingReports = dashboardMetrics?.pendingReports ?? reports.filter(report => report.status === 'pending').length;
 
     return (
         <div className="space-y-8 max-w-7xl mx-auto">
@@ -47,8 +45,8 @@ export default function Dashboard() {
                             <Users size={28} />
                         </div>
                         <div className="stat-title">Total Users</div>
-                        <div className="stat-value text-primary">{users.length}</div>
-                        <div className="stat-desc">21% more than last month</div>
+                        <div className="stat-value text-primary">{dashboardMetrics?.totalUsers ?? '...'}</div>
+                        <div className="stat-desc">Registered user accounts</div>
                     </div>
                     
                     <div className="stat border-l border-base-200">
@@ -57,15 +55,15 @@ export default function Dashboard() {
                         </div>
                         <div className="stat-title">Active Users</div>
                         <div className="stat-value text-secondary">{onlineUsers.length}</div>
-                        <div className="stat-desc">94% engagement rate</div>
+                        <div className="stat-desc">Currently connected</div>
                     </div>
 
                     <div className="stat border-l border-base-200">
                         <div className="stat-figure text-accent">
-                            <Heart size={28} />
+                            <Activity size={28} />
                         </div>
-                        <div className="stat-title">New Matches</div>
-                        <div className="stat-value text-accent">200</div>
+                        <div className="stat-title">Match Searches</div>
+                        <div className="stat-value text-accent">{dashboardMetrics?.matchSearches24h ?? '...'}</div>
                         <div className="stat-desc">In the last 24 hours</div>
                     </div>
 
@@ -73,9 +71,9 @@ export default function Dashboard() {
                         <div className="stat-figure text-error">
                             <AlertTriangle size={28} />
                         </div>
-                        <div className="stat-title">Reports Filed</div>
-                        <div className="stat-value text-error">{reports.length}</div>
-                        <div className="stat-desc text-error">Requires attention</div>
+                        <div className="stat-title">Pending Reports</div>
+                        <div className="stat-value text-error">{pendingReports}</div>
+                        <div className="stat-desc text-error">Awaiting review</div>
                     </div>
                 </div>
             </section>
@@ -130,7 +128,7 @@ export default function Dashboard() {
                                 <ShieldAlert className="text-error" size={22} />
                                 <span className="text-lg">Review Active Reports</span>
                             </span>
-                            <div className="badge badge-error badge-sm">{reports.length}</div>
+                            <div className="badge badge-error badge-sm">{pendingReports}</div>
                         </Link>
 
                         <Link to='/admin/settings' className="btn btn-ghost bg-base-100 border-base-300 justify-between h-auto py-4 shadow-sm hover:border-accent group">
@@ -142,12 +140,11 @@ export default function Dashboard() {
                         </Link>
                     </div>
 
-                    {/* Pro Tip Card */}
                     <div className="alert bg-primary/10 border-primary/20 mt-auto">
                         <Zap size={20} className="text-primary" />
                         <div>
-                            <h3 className="font-bold text-primary">System Update</h3>
-                            <div className="text-xs opacity-70">Server health is at 99.8%. No issues detected.</div>
+                            <h3 className="font-bold text-primary">Live administration</h3>
+                            <div className="text-xs opacity-70">Counts are based on current database records and recent activity.</div>
                         </div>
                     </div>
                 </section>

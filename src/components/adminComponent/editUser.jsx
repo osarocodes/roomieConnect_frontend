@@ -1,11 +1,16 @@
 import { useEffect, useState } from 'react';
 import { useAdminStore } from '@/stores/useAdminStore';
-import { useChatStore } from '@/stores/useChatStore';
 import { X, Loader2 } from 'lucide-react';
 
 export default function EditUser({ handleClose }) {
-    const { userToEdit, updateUserRole, isUpdatingRole, verifyStudent, isVerifyingStudent } = useAdminStore();
-    const { getUsers } = useChatStore();
+    const { 
+        userToEdit, 
+        updateUserRole, 
+        isUpdatingRole, 
+        verifyStudent, 
+        isVerifyingStudent, 
+        fetchUsers 
+    } = useAdminStore();
     const [selectedRole, setSelectedRole] = useState(userToEdit?.identity.role || 'User');
     const [verifyStatus, setVerifyStatus] = useState(userToEdit?.university.verifiedStudentStatus || false);
 
@@ -35,7 +40,7 @@ export default function EditUser({ handleClose }) {
                 await verifyStudent(userToEdit._id, updatedUserRole.verifiedStudentStatus);
             }
             // Refetch users to update the display in UserManagement
-            await getUsers();
+            await fetchUsers();
             handleClose();
         } catch (error) {
             console.error("Failed to update user role:", error);

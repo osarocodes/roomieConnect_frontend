@@ -17,10 +17,7 @@ export default function ListView() {
         getConversations,
         conversations,
         subscribeToNewConversations,
-        unsubscribeFromNewConversations,
         markMessagesAsRead,
-        subscribeToNewMessages,
-        unsubscribeFromNewMessages,
         searchTerm,
     } = useChatStore();
 
@@ -33,13 +30,7 @@ export default function ListView() {
     // Load conversations on component mount
     useEffect(() => {
         getConversations();
-        subscribeToNewConversations();
-        subscribeToNewMessages();
-
-        return () => {
-            unsubscribeFromNewConversations();
-            unsubscribeFromNewMessages();
-        }
+        return subscribeToNewConversations();
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 

@@ -1,12 +1,10 @@
 import { create } from 'zustand';
-import { axiosInstance } from '@/lib/axios';
+import { API_BASE_URL, axiosInstance } from '@/lib/axios';
 import toast from 'react-hot-toast';
 import { persist } from 'zustand/middleware';
 import { io } from 'socket.io-client';
 import { useMatchStore } from './useMatchStore';
 import { subscribeToPushNotifications } from '@/util/pushNotification';
-
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
 
 export const useAuthStore = create(persist((set, get) => ({
     authUser: null,
@@ -157,7 +155,7 @@ export const useAuthStore = create(persist((set, get) => ({
         const { authUser, socket } = get();
         if (!authUser || socket?.connected) return;
 
-        const newSocket = io(BASE_URL, {
+        const newSocket = io(API_BASE_URL, {
             withCredentials: true,
         });
         newSocket.connect();

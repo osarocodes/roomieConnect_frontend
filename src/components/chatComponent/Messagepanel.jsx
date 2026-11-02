@@ -15,7 +15,6 @@ export default function MessagePanel() {
         isMessagesLoading, 
         getMessages, 
         subscribeToNewMessages, 
-        unsubscribeFromNewMessages,
         conversations,
         getConversations,
         setSelectedUser,
@@ -59,17 +58,18 @@ export default function MessagePanel() {
     }, [messages, selectedUser, markMessagesAsRead]);
 
     useEffect(() => {
-        if (selectedUser) {
-            markMessagesAsRead(selectedUser.conversationId);
-            getMessages(selectedUser.conversationId);
-            subscribeToNewMessages();
-            subscribeToReadReciept();
+        if (!selectedUser) return;
 
-            return () => {
-                unsubscribeFromNewMessages();
-            };
-        }
-    }, [selectedUser, getMessages, subscribeToNewMessages, unsubscribeFromNewMessages, markMessagesAsRead, subscribeToReadReciept]);
+        markMessagesAsRead(selectedUser.conversationId);
+        getMessages(selectedUser.conversationId);
+        const unsubscribeFromNewMessages = subscribeToNewMessages();
+        const unsubscribeFromReadReceipt = subscribeToReadReciept();
+
+        return () => {
+            unsubscribeFromNewMessages();
+            unsubscribeFromReadReceipt();
+        };
+    }, [selectedUser, getMessages, subscribeToNewMessages, markMessagesAsRead, subscribeToReadReciept]);
 
     useEffect(() => {
         // Scroll to the bottom whenever messages change

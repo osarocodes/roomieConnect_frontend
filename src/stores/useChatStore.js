@@ -12,6 +12,7 @@ export const useChatStore = create((set, get) => ({
     selectedUser: null,
     isUsersLoading: false,
     isMessagesLoading: false,
+    messagesConversationId: null,
     isMessageRead: false,
     isReportingUser: false,
     conversations: [],
@@ -44,7 +45,7 @@ export const useChatStore = create((set, get) => ({
     },
     searchUsers: async (query) => {
         try {
-            const response = await axiosInstance.get(`/messages/search/users?query=${query}`);
+            const response = await axiosInstance.get('/messages/search/users', { params: { query } });
             set({ foundUsers: response.data });
             console.log("Found Users:", response.data);
             return true;
@@ -54,30 +55,44 @@ export const useChatStore = create((set, get) => ({
         }
     },
     getMessages: async (conversationId) => {
-        set({ isMessagesLoading: true });
+        set({ isMessagesLoading: true, messages: [], messagesConversationId: conversationId });
         try {
             const response = await axiosInstance.get(`/messages/${conversationId}`);
-            set({ messages: response.data });
+            if (get().messagesConversationId === conversationId) {
+                set({ messages: response.data });
+            }
             console.log(`Messages for conversation ${conversationId} fetched:`, response.data);
         } catch (error) {
             console.error(error.response?.data?.message || 'Failed to fetch messages');
+            if (get().messagesConversationId === conversationId) {
+                set({ messages: [] });
+            }
         } finally {
-            set({ isMessagesLoading: false });
+            if (get().messagesConversationId === conversationId) {
+                set({ isMessagesLoading: false });
+            }
         }
     },
     clearChat: async (conversationId) => {
         try {
-            // conversationId is the ID of the other user in 1-to-1 chat
             await axiosInstance.post(`/messages/clear/${conversationId}`);
             set({ messages: [] });
-
+            return true;
         } catch (error) {
             toast.error(error.response?.data?.message || 'Failed to clear chat');
+            return false;
         }
     },
     sendMessages: async (messageData) => {
         try {
-            const response = await axiosInstance.post(`/messages/send/${messageData.conversationId}`, messageData);
+            const formData = new FormData();
+            formData.append('content', messageData.content);
+            if (messageData.image) formData.append('image', messageData.image);
+
+            const response = await axiosInstance.post(
+                `/messages/send/${messageData.conversationId}`,
+                formData
+            );
             set((state) => ({ 
                 messages: [...state.messages, response.data] 
             }));
@@ -112,49 +127,46 @@ export const useChatStore = create((set, get) => ({
     },
     subscribeToNewConversations: () => {
         const socket = useAuthStore.getState().socket;
-        if (!socket) return;
+        if (!socket) return () => {};
 
-        socket.on("conversationUpdated", (updatedData) => {
-        set((state) => {
-            const exists = state.conversations.some(
-                conv => conv.conversationId.toString() === updatedData._id.toString()
-            );
-            if (exists) {
+        const handleConversationUpdated = (updatedData) => {
+            set((state) => {
+                const exists = state.conversations.some(
+                    conv => conv.conversationId.toString() === updatedData.conversationId
+                );
+                if (!exists) return state;
+
                 return {
                     conversations: state.conversations.map(conv =>
-                        conv.conversationId.toString() === updatedData._id.toString()
+                        conv.conversationId.toString() === updatedData.conversationId
                             ? { ...conv, lastMessage: updatedData.lastMessage }
                             : conv
                     )
                 };
-            }
-            return state;
-        });
-    });
-    },
-    unsubscribeFromNewConversations: () => {
-        const socket = useAuthStore.getState().socket;
-        if (socket) socket.off("newConversation");
+            });
+        };
+        socket.on("conversationUpdated", handleConversationUpdated);
+        return () => {
+            socket.off("conversationUpdated", handleConversationUpdated);
+        };
     },
     subscribeToNewMessages: () => {
-        const { selectedUser, getConversations } = get();
-        if (!selectedUser) return;
-
         const socket = useAuthStore.getState().socket;
-        if (!socket) return;
+        if (!socket) return () => {};
 
-        socket.on("newMessage", (newMessage) => {
-        if (newMessage.conversationId !== selectedUser.conversationId.toString()) return;
-        
-        set((state) => ({
-            messages: [...state.messages, newMessage],
-        }));
-        getConversations();
-    });
-    },
-    unsubscribeFromNewMessages: () => {
-        const socket = useAuthStore.getState().socket;
-        if (socket) socket.off("newMessage");
+        const handleNewMessage = (newMessage) => {
+            const { selectedUser, getConversations } = get();
+            if (newMessage.conversationId !== selectedUser?.conversationId?.toString()) return;
+
+            set((state) => ({
+                messages: [...state.messages, newMessage],
+            }));
+            getConversations();
+        };
+        socket.on("newMessage", handleNewMessage);
+        return () => {
+            socket.off("newMessage", handleNewMessage);
+        };
     },
     markMessagesAsRead: async (conversationId) => {
         try {
@@ -169,12 +181,12 @@ export const useChatStore = create((set, get) => ({
     },
     subscribeToReadReciept: () => {
         const socket = useAuthStore.getState().socket;
-        if (!socket) return
+        if (!socket) return () => {};
 
-        socket.on("messageSeen", ({ recipient }) => {
+        const handleMessageSeen = ({ recipient }) => {
             const { selectedUser } = get();
 
-            if (selectedUser.user._id === recipient) {
+            if (selectedUser?.user?._id === recipient) {
                 set((state) => ({
                     messages: state.messages.map((m) => ({
                         ...m, isRead: true
@@ -182,6 +194,10 @@ export const useChatStore = create((set, get) => ({
                     isMessageRead: true
                 }));
             }
-        });
+        };
+        socket.on("messageSeen", handleMessageSeen);
+        return () => {
+            socket.off("messageSeen", handleMessageSeen);
+        };
     }
 }));

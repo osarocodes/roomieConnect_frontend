@@ -25,7 +25,7 @@ const PasswordResetRequest = () => {
                 <div className="w-full max-w-md p-8 space-y-6 rounded shadow-md">
                     <h2 className="text-2xl font-bold text-center">Reset Your Password</h2>
                     <p className="text-sm text-center text-gray-600">
-                        Enter your email address below and we'll send you a link to reset your password.
+                        Enter your email address below and we'll send you a one-time code to reset your password.
                     </p>
                     <form 
                         className="space-y-4"

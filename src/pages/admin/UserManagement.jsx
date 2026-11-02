@@ -1,19 +1,19 @@
 import { useState, useEffect } from "react";
-import { Delete, Edit, ArrowLeft, Search} from "lucide-react";
+import { Delete, Edit, ArrowLeft, Search, Loader2 } from "lucide-react";
 import { Link } from "react-router-dom";
-import { useChatStore } from "@/stores/useChatStore";
 import { useAdminStore } from "@/stores/useAdminStore";
 import EditUser from "@/components/adminComponent/editUser";
 
 export default function UserManagement () {
-    const { users, getUsers } = useChatStore();
+    const { users, fetchUsers, isLoadingUsers } = useAdminStore();
     const { setUserToEdit, clearUserToEdit, deleteUser, isDeletingUser } = useAdminStore();
 
     const [ open, setOpen ] = useState(false);
+    const [searchQuery, setSearchQuery] = useState("");
 
     useEffect(() => {
-        getUsers();
-    }, [getUsers]);
+        fetchUsers();
+    }, [fetchUsers]);
 
     const handleOpen = () => {
         setOpen(true);
@@ -30,6 +30,14 @@ export default function UserManagement () {
             await deleteUser(userId);
         }
     };
+
+    if (isLoadingUsers) {
+        return (
+            <div className="flex items-center justify-center min-h-screen">
+                <Loader2 className="animate-spin" />
+            </div>
+        );
+    }
 
     if (users.length === 0) {
         return (
@@ -55,6 +63,13 @@ export default function UserManagement () {
         );
     }
 
+    const normalizedQuery = searchQuery.trim().toLowerCase();
+    const filteredUsers = users.filter((user) =>
+        `${user.identity.firstName} ${user.identity.lastName} ${user.identity.email}`
+            .toLowerCase()
+            .includes(normalizedQuery)
+    );
+
     return (
         <>
             <div className="flex items-center justify-self-start gap-12 ">
@@ -66,11 +81,13 @@ export default function UserManagement () {
                 <input
                     type="text"
                     placeholder="Search Users..."
+                    value={searchQuery}
+                    onChange={(event) => setSearchQuery(event.target.value)}
                     className="w-full border p-2 pl-10 rounded-[10px]" />
             </div>
 
             <div className="space-y-3 mt-5 rounded-lg max-h-[500px]">
-                {users.slice(0, 5).map((user) => (
+                {filteredUsers.map((user) => (
                     <div key={user._id} className="flex items-center gap-5 p-3 border-base-300 rounded-lg shadow">
                         <div>
                             <img src={user.identity.profilePic} alt={user.identity.name} className="w-12 h-12 rounded-full object-cover" />
@@ -103,6 +120,9 @@ export default function UserManagement () {
                         </div>
                     </div>
                 ))}
+                {filteredUsers.length === 0 && (
+                    <p className="text-center text-base-content/70">No users match that search.</p>
+                )}
             </div>
 
     </>

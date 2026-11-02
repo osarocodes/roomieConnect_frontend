@@ -23,14 +23,14 @@ export const useMatchStore = create(persist((set) => ({
             set({ isLoadingMatches: false });
         }
     },
-    blockUser: async (conversationId) => {
+    blockUser: async (userId) => {
         // set({ isBlocked: true });
         try {
-            await axiosInstance.post(`/users/block/${conversationId}`);
+            await axiosInstance.post(`/users/block/${userId}`);
             set((state) => ({
-                matches: state.matches.filter(match => match._id !== conversationId)
+                matches: state.matches.filter(match => match.user._id !== userId)
             }));
-            useChatStore.getState().checkBlockStatus(conversationId);
+            useChatStore.getState().checkBlockStatus(userId);
             toast.success("User blocked successfully");
         } catch (error) {
             const errorMessage = error.response?.data?.message || "Failed to block user";

@@ -1,12 +1,18 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { axiosInstance } from '@/lib/axios';
+import toast from 'react-hot-toast';
 
-export const useAdminStore = create(persist((set) => ({
+export const useAdminStore = create(persist((set, get) => ({
     users: [],
     activities: [],
     reports: [],
+    dashboardMetrics: null,
+    platformSettings: null,
     isLoadingUsers: false,
+    isLoadingSettings: false,
+    isSavingSettings: false,
+    isUpdatingReport: false,
     isUpdatingRole: false,
     isDeletingUser: false,
     userToEdit: null,
@@ -31,6 +37,39 @@ export const useAdminStore = create(persist((set) => ({
             console.error("Failed to fetch activities:", error);
         } finally {
             set({ isLoadingActivities: false });
+        }
+    },
+    fetchDashboardMetrics: async () => {
+        try {
+            const res = await axiosInstance.get('/admin/metrics');
+            set({ dashboardMetrics: res.data });
+        } catch (error) {
+            console.error('Failed to fetch dashboard metrics:', error);
+        }
+    },
+    fetchPlatformSettings: async () => {
+        set({ isLoadingSettings: true });
+        try {
+            const res = await axiosInstance.get('/admin/settings');
+            set({ platformSettings: res.data });
+        } catch (error) {
+            toast.error(error.response?.data?.message || 'Failed to load platform settings.');
+        } finally {
+            set({ isLoadingSettings: false });
+        }
+    },
+    savePlatformSettings: async (matching) => {
+        set({ isSavingSettings: true });
+        try {
+            const res = await axiosInstance.patch('/admin/settings', { matching });
+            set({ platformSettings: res.data });
+            toast.success('Matching settings saved.');
+            return true;
+        } catch (error) {
+            toast.error(error.response?.data?.message || 'Failed to save platform settings.');
+            return false;
+        } finally {
+            set({ isSavingSettings: false });
         }
     },
     updateUserRole: async (userId, newRole) => {
@@ -75,6 +114,23 @@ export const useAdminStore = create(persist((set) => ({
             set({ reports: res.data })
         } catch (error) {
             console.error("Unable to fetch reports: ", error);
+        }
+    },
+    updateReport: async (reportId, updates) => {
+        set({ isUpdatingReport: true });
+        try {
+            const res = await axiosInstance.patch(`/admin/reports/${reportId}`, updates);
+            set((state) => ({
+                reports: state.reports.map((report) => report._id === reportId ? res.data : report)
+            }));
+            await get().fetchDashboardMetrics();
+            toast.success('Report review saved.');
+            return true;
+        } catch (error) {
+            toast.error(error.response?.data?.message || 'Failed to save report review.');
+            return false;
+        } finally {
+            set({ isUpdatingReport: false });
         }
     },
     deleteUser: async (userId) => {

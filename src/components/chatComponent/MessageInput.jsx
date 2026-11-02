@@ -5,6 +5,7 @@ import toast from "react-hot-toast";
 
 const MessageInput = () => {
     const [text, setText] = useState("");
+    const [imageFile, setImageFile] = useState(null);
     const [imagePreview, setImagePreview] = useState(null);
     const fileInputRef = useRef(null);
     const { sendMessages, messages, selectedUser } = useChatStore();
@@ -17,19 +18,34 @@ const MessageInput = () => {
     console.log("Selected User in MessageInput:", selectedUser);
     const handleImageChange = (e) => {
         const file = e.target.files[0];
+        if (!file) return;
+
         if (!file.type.startsWith("image/")) {
             toast.error("Please select an image file");
+            e.target.value = "";
+            return;
+        }
+
+        if (file.size > 10 * 1024 * 1024) {
+            toast.error("Images must not exceed 10 MB.");
+            e.target.value = "";
             return;
         }
 
         const reader = new FileReader();
         reader.onloadend = () => {
+            setImageFile(file);
             setImagePreview(reader.result);
+        };
+        reader.onerror = () => {
+            toast.error("Could not read the selected image.");
+            e.target.value = "";
         };
         reader.readAsDataURL(file);
     };
 
     const removeImage = () => {
+        setImageFile(null);
         setImagePreview(null);
         if (fileInputRef.current) fileInputRef.current.value = "";
     };
@@ -42,12 +58,13 @@ const MessageInput = () => {
             const result = await sendMessages({
                 conversationId: selectedUser?.conversationId,
                 content: text.trim(),
-                image: imagePreview,
+                image: imageFile,
             });
 
         // Clear form
             if (result.success) {
                 setText("");
+                setImageFile(null);
                 setImagePreview(null);
                 if (fileInputRef.current) fileInputRef.current.value = "";
             }

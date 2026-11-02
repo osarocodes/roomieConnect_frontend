@@ -42,6 +42,8 @@ const getSafeUser = (rawUser) => ({
     ...rawUser,
 });
 
+const valuesMatch = (left, right) => JSON.stringify(left) === JSON.stringify(right);
+
 export default function ProfilePage() {
     const { authUser, updateProfile, isUpdatingProfile } = useAuthStore();
     const [isEditingPersonalInfo, setIsEditingPersonalInfo] = useState(false);
@@ -141,7 +143,7 @@ export default function ProfilePage() {
             const a = authUser[category] || {};
             const allKeys = new Set([...Object.keys(u), ...Object.keys(a)]);
             for (let key of allKeys) {
-                if (u[key] !== a[key]) return true;
+                if (!valuesMatch(u[key], a[key])) return true;
             }
             return false;
         });
@@ -171,7 +173,7 @@ export default function ProfilePage() {
             const uCat = user[category] || {};
             const aCat = authUser[category] || {};
             Object.keys({ ...uCat, ...aCat }).forEach(key => {
-                if (uCat[key] !== aCat[key]) {
+                if (!valuesMatch(uCat[key], aCat[key])) {
                     change[`${category}.${key}`] = uCat[key];
                 }
             });
@@ -451,7 +453,7 @@ export default function ProfilePage() {
                             <div className="form-control">
                                 <label className="label"><span className="label-text">Location Preference</span></label>
                                 <select name="preferredArea" value={user?.locationPreference?.preferredArea || ''} onChange={handleChange('locationPreference')} className="select select-bordered w-full">
-                                    <option value="BDPA">BDPA</option>
+                                    <option value="Bdpa">BDPA</option>
                                     <option value="Osasogie">Osasogie</option>
                                     <option value="Ekosodin">Ekosodin</option>
                                 </select>

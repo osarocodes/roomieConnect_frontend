@@ -9,6 +9,8 @@ export default function Verification() {
   const [isResending, setIsResending] = useState(false);
   const [resendError, setResendError] = useState("");
   const [otpInputKey, setOtpInputKey] = useState(0);
+  const [otp, setOtp] = useState("");
+  const [isVerifying, setIsVerifying] = useState(false);
   const { verifyOtp, requestOtp } = useAuthStore();
   const email = new URLSearchParams(window.location.search).get("email");
 
@@ -23,18 +25,22 @@ export default function Verification() {
   }, [countdown]);
 
   const handleVerifyOtp = async (otp) => {
+    if (otp.length !== 4 || isVerifying) return;
+
     if (!email) {
       toast.error("Email not found in the page URL.");
       return;
     }
 
-    const response = await verifyOtp({ email, otp });
-    if (response.success) {
-      toast.success(response.message);
-      sessionStorage.setItem('resetToken', response.resetToken);
-      window.location.href = `/auth/reset-password?email=${encodeURIComponent(email)}`;
-    } else {
-      toast.error(response.message);
+    setIsVerifying(true);
+    try {
+      const response = await verifyOtp({ email, otp });
+      if (response.success) {
+        sessionStorage.setItem('resetToken', response.resetToken);
+        window.location.href = `/auth/reset-password?email=${encodeURIComponent(email)}`;
+      }
+    } finally {
+      setIsVerifying(false);
     }
   };
 
@@ -50,6 +56,7 @@ export default function Verification() {
       const response = await requestOtp({ email });
       if (response.success) {
         setCountdown(10 * 60 * 1000);
+        setOtp("");
         setOtpInputKey((key) => key + 1);
       } else {
         setResendError(response.message || "Could not resend the code. Please try again.");
@@ -72,19 +79,23 @@ export default function Verification() {
           <h1 className="text-2xl font-bold text-center">Check your email</h1>
           <p className="text-md text-center text-gray-600">We've sent the code to your email</p>
 
-          <form className="space-y-4 mt-6">
+          <form className="space-y-4 mt-6" onSubmit={(event) => {
+            event.preventDefault();
+            handleVerifyOtp(otp);
+          }}>
             <div className="flex items-center justify-center gap-3">
-              <OtpInput key={otpInputKey} length={4} onComplete={(otp) => handleVerifyOtp(otp)} />
+              <OtpInput key={otpInputKey} length={4} onComplete={setOtp} />
             </div>
 
             <p className="text-sm mt-10 text-center text-gray-300">
               Code expires in <span className="font-bold text-gray-500">{Math.floor(countdown / 1000 / 60)}:{String(Math.floor(countdown / 1000 % 60)).padStart(2, '0')}</span>
             </p>
-            <button 
+            <button
               type="submit"
+              disabled={otp.length !== 4 || isVerifying}
               className="btn w-full px-4 py-2 text-white btn-primary rounded hover:btn-primary-100 focus:outline-none focus:ring focus:ring-blue-300"
             >
-              Verify
+              {isVerifying ? "Verifying..." : "Verify"}
             </button>
             <button 
               type="button"
