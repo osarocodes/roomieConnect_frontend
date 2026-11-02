@@ -5,39 +5,59 @@ import { useAuthStore } from "../../stores/useAuthStore";
 import toast from 'react-hot-toast';
 
 export default function Verification() {
-  const [countdown, setCountdown] = useState(10*60*1000); // 10 minutes countdown
-  const { verifyOtp } = useAuthStore();
+  const [countdown, setCountdown] = useState(10 * 60 * 1000);
+  const [isResending, setIsResending] = useState(false);
+  const [resendError, setResendError] = useState("");
+  const [otpInputKey, setOtpInputKey] = useState(0);
+  const { verifyOtp, requestOtp } = useAuthStore();
+  const email = new URLSearchParams(window.location.search).get("email");
+
   useEffect(() => {
-    const timer = setInterval(() => {
-      setCountdown(prevCountdown => {
-        if (prevCountdown <= 1000) {
-          clearInterval(timer);
-          return 0;
-        }
-        return prevCountdown - 1000;
-      });
+    if (countdown <= 0) return undefined;
+
+    const timer = setTimeout(() => {
+      setCountdown((remaining) => Math.max(0, remaining - 1000));
     }, 1000);
 
-    return () => clearInterval(timer);
-  }, []);
+    return () => clearTimeout(timer);
+  }, [countdown]);
 
   const handleVerifyOtp = async (otp) => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const email = urlParams.get('email');
-
     if (!email) {
-      alert("Email not found in query parameters.");
+      toast.error("Email not found in the page URL.");
       return;
     }
 
     const response = await verifyOtp({ email, otp });
     if (response.success) {
       toast.success(response.message);
-      // Redirect to the password reset page with the email as a query parameter
       sessionStorage.setItem('resetToken', response.resetToken);
       window.location.href = `/auth/reset-password?email=${encodeURIComponent(email)}`;
     } else {
       toast.error(response.message);
+    }
+  };
+
+  const resendOTP = async () => {
+    if (!email) {
+      setResendError("Email not found in the page URL.");
+      return;
+    }
+
+    setIsResending(true);
+    setResendError("");
+    try {
+      const response = await requestOtp({ email });
+      if (response.success) {
+        setCountdown(10 * 60 * 1000);
+        setOtpInputKey((key) => key + 1);
+      } else {
+        setResendError(response.message || "Could not resend the code. Please try again.");
+      }
+    } catch {
+      setResendError("Could not resend the code. Please try again.");
+    } finally {
+      setIsResending(false);
     }
   };
 
@@ -54,7 +74,7 @@ export default function Verification() {
 
           <form className="space-y-4 mt-6">
             <div className="flex items-center justify-center gap-3">
-              <OtpInput length={4} onComplete={(otp) => handleVerifyOtp(otp)} />
+              <OtpInput key={otpInputKey} length={4} onComplete={(otp) => handleVerifyOtp(otp)} />
             </div>
 
             <p className="text-sm mt-10 text-center text-gray-300">
@@ -68,10 +88,17 @@ export default function Verification() {
             </button>
             <button 
               type="button"
+              disabled={isResending}
               className="btn w-full px-4 py-2 text-white rounded hover:btn-secondary-100 focus:outline-none focus:ring focus:ring-blue-300"
+              onClick={resendOTP}
             >
-              Send Again
+              {isResending ? "Sending..." : "Send Again"}
             </button>
+            {resendError && (
+              <p className="text-sm text-center text-error" role="alert">
+                {resendError}
+              </p>
+            )}
           </form>
         </div>
       </div>

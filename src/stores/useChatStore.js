@@ -77,14 +77,15 @@ export const useChatStore = create((set, get) => ({
     },
     sendMessages: async (messageData) => {
         try {
-            console.log("Sending message with data:", messageData);
-            console.log("Selected User in Store:", get().selectedUser);
             const response = await axiosInstance.post(`/messages/send/${messageData.conversationId}`, messageData);
             set((state) => ({ 
                 messages: [...state.messages, response.data] 
             }));
+            return { success: true,}
         } catch (error) {
-            console.error(error.response?.data?.message || 'Failed to send message');   
+            console.error(error.response?.data?.message || 'Failed to send message');
+            toast.error(error.response?.data?.message || 'Failed to send message');
+            return { success: false, message: error.response?.data?.message || 'Failed to send message' }; 
         }
     },
     checkBlockStatus: async (otherUserId) => {

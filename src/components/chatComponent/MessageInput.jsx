@@ -39,16 +39,18 @@ const MessageInput = () => {
         if (!text.trim() && !imagePreview) return;
 
         try {
-            await sendMessages({
+            const result = await sendMessages({
                 conversationId: selectedUser?.conversationId,
                 content: text.trim(),
                 image: imagePreview,
             });
 
         // Clear form
-            setText("");
-            setImagePreview(null);
-            if (fileInputRef.current) fileInputRef.current.value = "";
+            if (result.success) {
+                setText("");
+                setImagePreview(null);
+                if (fileInputRef.current) fileInputRef.current.value = "";
+            }
         } catch (error) {
             console.error("Failed to send message:", error);
         }

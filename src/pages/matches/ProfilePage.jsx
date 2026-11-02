@@ -106,8 +106,8 @@ export default function ProfilePage() {
             return;
         }
 
-        if (file.size > 5 * 1024 * 1024) { // 5MB limit
-            toast.error("Profile picture size exceeds 5MB limit.");
+        if (file.size > 10 * 1024 * 1024) { // 10MB limit
+            toast.error("Profile picture size exceeds 10MB limit.");
             return;
         }
 

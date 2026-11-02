@@ -133,8 +133,8 @@ export default function SignupContainer() {
 			return;
 		}
 	
-		if (file.size > 2 * 1024 * 1024) {
-			toast.error("Profile picture size exceeds 2MB limit");
+		if (file.size > 10 * 1024 * 1024) {
+			toast.error("Profile picture size exceeds 10MB limit");
 			return;
 		}
 		if (imagePreviewUrl) URL.revokeObjectURL(imagePreviewUrl);
@@ -153,8 +153,8 @@ export default function SignupContainer() {
 			return;
 		}
 	
-		if (file.size > 5 * 1024 * 1024) {
-			toast.error("Admission letter size exceeds 5MB limit");
+		if (file.size > 10 * 1024 * 1024) {
+			toast.error("Admission letter size exceeds 10MB limit");
 			return;
 		}
 
