@@ -130,20 +130,31 @@ export const useChatStore = create((set, get) => ({
         if (!socket) return () => {};
 
         const handleConversationUpdated = (updatedData) => {
+            let conversationExists = false;
             set((state) => {
-                const exists = state.conversations.some(
+                conversationExists = state.conversations.some(
                     conv => conv.conversationId.toString() === updatedData.conversationId
                 );
-                if (!exists) return state;
+                if (!conversationExists) return state;
+
+                const conversations = state.conversations.map(conv =>
+                    conv.conversationId.toString() === updatedData.conversationId
+                        ? {
+                            ...conv,
+                            ...(updatedData.lastMessage && { lastMessage: updatedData.lastMessage }),
+                            ...(updatedData.unreadCount !== undefined && { unreadCount: updatedData.unreadCount }),
+                            ...(updatedData.updatedAt && { updatedAt: updatedData.updatedAt }),
+                        }
+                        : conv
+                );
 
                 return {
-                    conversations: state.conversations.map(conv =>
-                        conv.conversationId.toString() === updatedData.conversationId
-                            ? { ...conv, lastMessage: updatedData.lastMessage }
-                            : conv
-                    )
+                    conversations: updatedData.updatedAt
+                        ? conversations.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt))
+                        : conversations
                 };
             });
+            if (!conversationExists) get().getConversations();
         };
         socket.on("conversationUpdated", handleConversationUpdated);
         return () => {
@@ -172,7 +183,16 @@ export const useChatStore = create((set, get) => ({
         try {
             await axiosInstance.post(`/messages/read/${conversationId}`);
             set((state) => ({
-                messages: state.messages.map((m) => ({ ...m, isRead: true })),
+                messages: state.messages.map((message) =>
+                    message.conversationId.toString() === conversationId.toString()
+                        ? { ...message, isRead: true }
+                        : message
+                ),
+                conversations: state.conversations.map((conversation) =>
+                    conversation.conversationId.toString() === conversationId.toString()
+                        ? { ...conversation, unreadCount: 0 }
+                        : conversation
+                ),
                 isMessageRead: true
             }));
         } catch (error) {
@@ -183,10 +203,10 @@ export const useChatStore = create((set, get) => ({
         const socket = useAuthStore.getState().socket;
         if (!socket) return () => {};
 
-        const handleMessageSeen = ({ recipient }) => {
+        const handleMessageSeen = ({ conversationId }) => {
             const { selectedUser } = get();
 
-            if (selectedUser?.user?._id === recipient) {
+            if (selectedUser?.conversationId?.toString() === conversationId) {
                 set((state) => ({
                     messages: state.messages.map((m) => ({
                         ...m, isRead: true

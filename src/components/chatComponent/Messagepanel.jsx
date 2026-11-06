@@ -15,6 +15,7 @@ export default function MessagePanel() {
         isMessagesLoading, 
         getMessages, 
         subscribeToNewMessages, 
+        subscribeToNewConversations,
         conversations,
         getConversations,
         setSelectedUser,
@@ -63,13 +64,15 @@ export default function MessagePanel() {
         markMessagesAsRead(selectedUser.conversationId);
         getMessages(selectedUser.conversationId);
         const unsubscribeFromNewMessages = subscribeToNewMessages();
+        const unsubscribeFromNewConversations = subscribeToNewConversations();
         const unsubscribeFromReadReceipt = subscribeToReadReciept();
 
         return () => {
             unsubscribeFromNewMessages();
+            unsubscribeFromNewConversations();
             unsubscribeFromReadReceipt();
         };
-    }, [selectedUser, getMessages, subscribeToNewMessages, markMessagesAsRead, subscribeToReadReciept]);
+    }, [selectedUser, getMessages, subscribeToNewMessages, subscribeToNewConversations, markMessagesAsRead, subscribeToReadReciept]);
 
     useEffect(() => {
         // Scroll to the bottom whenever messages change

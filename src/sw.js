@@ -1,5 +1,9 @@
 import { cleanupOutdatedCaches, precacheAndRoute } from 'workbox-precaching';
-import { clientsClaim } from 'workbox-core'
+import { registerRoute } from 'workbox-routing';
+import { clientsClaim } from 'workbox-core';
+import { NetworkFirst, NetworkOnly } from 'workbox-strategies';
+import { ExpirationPlugin } from 'workbox-expiration';
+import { API_BASE_URL } from './lib/apiConfig';
 
 self.skipWaiting();
 clientsClaim();
@@ -7,22 +11,16 @@ clientsClaim();
 precacheAndRoute(self.__WB_MANIFEST);
 cleanupOutdatedCaches();
 
-// Ensure credentials (cookies) are sent with API requests
-self.addEventListener('fetch', (event) => {
-    // Only intercept API calls, let other requests go through normally
-    if (event.request.url.includes('/api/')) {
-        event.respondWith(
-            fetch(event.request.clone(), {
-                credentials: 'include'
-            }).catch(() => {
-                // Network error, continue normally
-                return fetch(event.request.clone(), {
-                    credentials: 'include'
-                });
-            })
-        );
-    }
-});
+const isApiRequest = ({ url }) =>
+    url.origin === API_BASE_URL && url.pathname.startsWith('/api/');
+
+for (const method of ['GET', 'HEAD', 'POST', 'PUT', 'PATCH', 'DELETE']) {
+    registerRoute(
+        isApiRequest,
+        new NetworkOnly({ fetchOptions: { credentials: 'include' } }),
+        method
+    );
+}
 
 self.addEventListener('push', (event) => {
     const data = event.data?.json();
@@ -56,3 +54,17 @@ self.addEventListener('push', (event) => {
         })
     );
 });
+
+registerRoute(
+    ({ url }) => url.origin === 'https://res.cloudinary.com',
+    new NetworkFirst({
+        cacheName: 'cloudinary-images',
+        networkTimeoutSeconds: 3,
+        plugins: [
+            new ExpirationPlugin({
+                maxEntries: 50,
+                maxAgeSeconds: 30 * 24 * 60 * 60,
+            }),
+        ],
+    })
+);
