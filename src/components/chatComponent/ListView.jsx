@@ -17,7 +17,6 @@ export default function ListView() {
         getConversations,
         conversations,
         subscribeToNewConversations,
-        markMessagesAsRead,
         searchTerm,
     } = useChatStore();
 
@@ -34,12 +33,6 @@ export default function ListView() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    // Subscribe to messages and mark as read when selectedUser changes
-    useEffect(() => {
-        if (selectedUser?.conversationId) {
-            markMessagesAsRead(selectedUser.conversationId);
-        }
-    }, [selectedUser, markMessagesAsRead]);
     console.log("Conversations in ListView:", conversations);
     console.log("Users in ListView:", users);
 
