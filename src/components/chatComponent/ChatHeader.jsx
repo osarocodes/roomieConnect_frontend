@@ -26,6 +26,7 @@ const ChatHeader = ({ userObj }) => {
     const { onlineUsers } = useAuthStore();
     const { setSelectedUser, clearChat, isBlocked, checkBlockStatus, setReportedUser, isReportingUser } = useChatStore();
     const { blockUser } = useMatchStore();
+    const isUserOnline = onlineUsers.some(id => id.toString() === userObj?.user?._id?.toString());
 
     useEffect(() => {
         if (userObj && userObj.user._id) {
@@ -114,8 +115,8 @@ const submitFinalReport = async () => {
                     {userObj && (
                         <div>
                             <h2 className="text-lg font-semibold">{userObj.user.firstName} {userObj.user.lastName}</h2>
-                            <p className={`text-sm ${onlineUsers.includes(userObj.user._id) ? 'text-green-500/66' : 'text-gray-500'}`}>
-                                {onlineUsers.includes(userObj.user._id) ? 'Online' : 'Offline'}
+                            <p className={`text-sm ${isUserOnline ? 'text-green-500/66' : 'text-gray-500'}`}>
+                                {isUserOnline ? 'Online' : 'Offline'}
                             </p>
                         </div>
                     )}

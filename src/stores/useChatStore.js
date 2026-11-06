@@ -4,6 +4,7 @@ import { axiosInstance } from '../lib/axios';
 // Importing useAuthStore to access the socket instance
 import { useAuthStore } from './useAuthStore';
 
+let conversationRequestSequence = 0;
 
 export const useChatStore = create((set, get) => ({
     messages: [],
@@ -16,16 +17,22 @@ export const useChatStore = create((set, get) => ({
     isMessageRead: false,
     isReportingUser: false,
     conversations: [],
+    conversationsRevision: 0,
     isBlocked: false,
     searchTerm: "",
     
     setSearchTerm: (term) => set({ searchTerm: term }),
     getConversations: async () => {
+        const requestId = ++conversationRequestSequence;
+        const revisionAtRequest = get().conversationsRevision;
         try {
             const response = await axiosInstance.get('/messages/conversations');
-            set({ conversations: response.data });
-            console.log("Conversations fetched:", response.data);
-            console.log("Current conversations in store:", get().conversations);
+            if (
+                requestId === conversationRequestSequence &&
+                revisionAtRequest === get().conversationsRevision
+            ) {
+                set({ conversations: response.data });
+            }
         } catch (error) {
             console.error("Error getting conversation", error)
         }
@@ -130,28 +137,54 @@ export const useChatStore = create((set, get) => ({
         if (!socket) return () => {};
 
         const handleConversationUpdated = (updatedData) => {
+            const updatedConversationId = updatedData.conversationId?.toString();
             let conversationExists = false;
             set((state) => {
                 conversationExists = state.conversations.some(
-                    conv => conv.conversationId.toString() === updatedData.conversationId
+                    conv => conv.conversationId.toString() === updatedConversationId
                 );
                 if (!conversationExists) return state;
 
-                const conversations = state.conversations.map(conv =>
-                    conv.conversationId.toString() === updatedData.conversationId
-                        ? {
-                            ...conv,
-                            ...(updatedData.lastMessage && { lastMessage: updatedData.lastMessage }),
-                            ...(updatedData.unreadCount !== undefined && { unreadCount: updatedData.unreadCount }),
-                            ...(updatedData.updatedAt && { updatedAt: updatedData.updatedAt }),
+                let changed = false;
+                const conversations = state.conversations.map(conv => {
+                    if (conv.conversationId.toString() !== updatedConversationId) return conv;
+
+                    const nextConversation = { ...conv };
+                    if (updatedData.lastMessage) {
+                        const currentLastMessage = conv.lastMessage;
+                        const nextLastMessage = updatedData.lastMessage;
+                        const sameLastMessage =
+                            currentLastMessage?.content === nextLastMessage.content &&
+                            currentLastMessage?.image === nextLastMessage.image &&
+                            new Date(currentLastMessage?.createdAt || 0).getTime() ===
+                                new Date(nextLastMessage.createdAt || 0).getTime();
+                        if (!sameLastMessage) {
+                            nextConversation.lastMessage = nextLastMessage;
+                            changed = true;
                         }
-                        : conv
-                );
+                    }
+                    if (
+                        updatedData.unreadCount !== undefined &&
+                        conv.unreadCount !== updatedData.unreadCount
+                    ) {
+                        nextConversation.unreadCount = updatedData.unreadCount;
+                        changed = true;
+                    }
+                    if (
+                        updatedData.updatedAt &&
+                        new Date(conv.updatedAt).getTime() !== new Date(updatedData.updatedAt).getTime()
+                    ) {
+                        nextConversation.updatedAt = updatedData.updatedAt;
+                        changed = true;
+                    }
+                    return changed ? nextConversation : conv;
+                });
 
                 return {
-                    conversations: updatedData.updatedAt
+                    conversations: changed && updatedData.updatedAt
                         ? conversations.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt))
-                        : conversations
+                        : changed ? conversations : state.conversations,
+                    conversationsRevision: state.conversationsRevision + 1,
                 };
             });
             if (!conversationExists) get().getConversations();
@@ -169,9 +202,9 @@ export const useChatStore = create((set, get) => ({
             const { selectedUser, getConversations } = get();
             if (newMessage.conversationId !== selectedUser?.conversationId?.toString()) return;
 
-            set((state) => ({
-                messages: [...state.messages, newMessage],
-            }));
+            set((state) => state.messages.some(message => message._id === newMessage._id)
+                ? state
+                : { messages: [...state.messages, newMessage] });
             getConversations();
         };
         socket.on("newMessage", handleNewMessage);
@@ -182,19 +215,28 @@ export const useChatStore = create((set, get) => ({
     markMessagesAsRead: async (conversationId) => {
         try {
             await axiosInstance.post(`/messages/read/${conversationId}`);
-            set((state) => ({
-                messages: state.messages.map((message) =>
-                    message.conversationId.toString() === conversationId.toString()
-                        ? { ...message, isRead: true }
-                        : message
-                ),
-                conversations: state.conversations.map((conversation) =>
-                    conversation.conversationId.toString() === conversationId.toString()
-                        ? { ...conversation, unreadCount: 0 }
-                        : conversation
-                ),
-                isMessageRead: true
-            }));
+            set((state) => {
+                const conversations = state.conversations.map((conversation) => {
+                    if (
+                        conversation.conversationId.toString() !== conversationId.toString() ||
+                        conversation.unreadCount === 0
+                    ) {
+                        return conversation;
+                    }
+                    return { ...conversation, unreadCount: 0 };
+                });
+
+                return {
+                    messages: state.messages.map((message) =>
+                        message.conversationId.toString() === conversationId.toString()
+                            ? { ...message, isRead: true }
+                            : message
+                    ),
+                    conversations,
+                    conversationsRevision: state.conversationsRevision + 1,
+                    isMessageRead: true
+                };
+            });
         } catch (error) {
             console.error("Error marking messages as Read", error);
         }

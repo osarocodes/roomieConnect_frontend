@@ -163,7 +163,11 @@ export const useAuthStore = create(persist((set, get) => ({
             withCredentials: true,
         });
         newSocket.on('onlineUsers', (onlineUsers) => {
-            set({ onlineUsers });
+            set({
+                onlineUsers: Array.isArray(onlineUsers)
+                    ? onlineUsers.map(userId => userId.toString())
+                    : [],
+            });
         });
         newSocket.on('disconnect', () => {
             set({ onlineUsers: [] });
