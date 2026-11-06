@@ -74,7 +74,7 @@ export default function Login() {
 						<div className="flex flex-col items-start gap-1 group">
 							<h1 className='text-2xl font-bold mt-2'>Welcome Back</h1>
 							{/* <p>{validateForm()}</p> */}
-							<p className='text-[#f5f5dc8f]'>Sign in to your account</p>
+							<p className='text-[#656565ae]'>Sign in to your account</p>
 						</div>
 					</div>
 					<form onSubmit={handleSubmit} noValidate>

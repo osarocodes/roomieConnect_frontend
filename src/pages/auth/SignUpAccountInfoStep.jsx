@@ -10,7 +10,7 @@ const AccountInfo = ({ formData, handleChange, registerRef }) => {
   return (
     <div className="w-full max-w-md">
       <h2 className="text-2xl font-bold mt-2">Hello there,</h2>
-      <p className="text-[#f5f5dc8f]">We are excited to have you here, let's get you started.</p>
+      <p className="text-[#5656558f]">We are excited to have you here, let's get you started.</p>
       <div className="my-10 space-y-2.5">
         <div className="relative" ref={(el) => registerRef('email', el)}>
           <div className='absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none'>
