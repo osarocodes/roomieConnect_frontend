@@ -42,11 +42,14 @@ export default function MessagePanel() {
     useEffect(() => {
         if (conversationId && conversations.length > 0) {
             const conversation = conversations.find(c => c.conversationId === conversationId);
-            if (conversation) {
+            if (
+                conversation &&
+                selectedUser?.conversationId?.toString() !== conversation.conversationId.toString()
+            ) {
                 setSelectedUser(conversation);
             }
         }
-    }, [conversationId, conversations, setSelectedUser]);
+    }, [conversationId, conversations, selectedUser?.conversationId, setSelectedUser]);
 
     useEffect(() => {
         if (selectedUser && messages.length > 0) {
